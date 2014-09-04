@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>"Responsive" Dashboard Layout</title>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="http://public.tableausoftware.com/javascripts/api/tableau_v8.js"></script>
+    </head>
+    <body>
+        <div id="tableauViz"></div>
+        <script type="text/javascript">
+            // This url is the prefix that is used for all the sheet/dashboard views in your workbook.
+            var workbookUrl = "http://demo8apac.tableausoftware.com/views/DashboardLayouts/";
+
+            // This is populated with the sheets you want to switch between, widest sheet first.
+            var sheetTable = [
+                { sheetName: "PC Dash", sheetUrl: "PCDash", minWidth: 1250 },
+                { sheetName: "iPad Landscape Dash", sheetUrl: "iPadLandscapeDash", minWidth: 980 },
+                { sheetName: "iPad Portrait Dash", sheetUrl: "iPadPortraitDash", minWidth: 700 },
+                { sheetName: "iPhone Dash", sheetUrl: "iPhoneDash", minWidth: 0 }
+            ];
+
+            // ------------------------------------------------------------------------------
+            // The code below here should work with your url and table specified above, without modification.
+
+            var workbook;
+            var viz;
+            var currentSheet;
+
+            // This function loops through your table and returns the first sheet that fits in the current width.
+            function getSheet(width) {
+                for (var i = 0; i < sheetTable.length; i++) {
+                    if (width >= sheetTable[i].minWidth) {
+                        return sheetTable[i];
+                    }
+                }
+                return sheetTable[sheetTable.length - 1]; // just in case none of the minWidth values work
+            }
+
+            // This function is called by jQuery when the window is ready for use.
+            $(function () { initializeViz(); });
+
+            // This function adds the viz to the div named tableauViz, selecting the sheet that fits the current width.
+            function initializeViz() {
+                var placeholderDiv = document.getElementById("tableauViz");
+                currentSheet = getSheet($(window).width());
+                var options = {
+                    width: placeholderDiv.offsetWidth,
+                    height: $(window).height(),
+                    hideTabs: true,
+                    hideToolbar: true,
+                    onFirstInteractive: function () {
+                        workbook = viz.getWorkbook();
+                    }
+                };
+                viz = new tableauSoftware.Viz(placeholderDiv, workbookUrl + currentSheet.sheetUrl, options);
+            }
+
+            // This function is called when the window resizes.  It changes sheets if needed.
+            $(window).resize(function () {
+                viz.setFrameSize($(window).width(), $(window).height());
+                var newSheet = getSheet($(window).width());
+                if (newSheet.sheetName !== currentSheet.sheetName) {
+                    currentSheet = newSheet;
+                    workbook.activateSheetAsync(currentSheet.sheetName)
+                        .otherwise(function(err) {
+                            console.log(err);
+                        });
+                }
+            });
+
+        </script>        
+    </body>
+</html>
